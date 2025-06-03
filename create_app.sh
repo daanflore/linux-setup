@@ -53,20 +53,25 @@ create_text_box() {
     done
 
     # Add padding for margins and formatting
-    local box_width=$((max_length + 6))  # 2 chars on each side + 2 for '│ ' prefix
-
+    local box_width=$((max_length + 4))  # +4 for margin spaces (2 on each side)
+    local border_width=$((box_width + 2)) # +2 for the border characters
+    local title_len=${#lines[0]}
+    
     # Create the top border with title
-    printf "┌─ %s %s┐\n" "${lines[0]}" "$(printf '─%.0s' $(seq $((box_width - ${#lines[0]} - 4))))"
+    printf "┌─ %s " "${lines[0]}"
+    printf "─%.0s" $(seq 1 $((border_width - title_len - 4)))
+    printf "─┐\n"
 
     # Print content lines with proper padding
     for ((i=1; i<${#lines[@]}; i++)); do
         local line="${lines[$i]}"
-        local padding=$((box_width - ${#line} - 2))
-        printf "│ %-${padding}s │\n" "$line"
+        printf "│ %-${box_width}s │\n" "$line"
     done
 
     # Create the bottom border
-    printf "└%s┘\n" "$(printf '─%.0s' $(seq $((box_width))))"
+    printf "└"
+    printf "─%.0s" $(seq 1 $border_width)
+    printf "┘\n"
 }
 
 # Get workspace directory
