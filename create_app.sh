@@ -60,6 +60,14 @@ if [ -z "$REPO_NAME" ]; then
     exit 1
 fi
 echo "✓ Repository name set to: $REPO_NAME"
+
+printf "Enter a generic description for the application (e.g., 'Text Editor'): "
+read -r GENERIC_NAME
+if [ -z "$GENERIC_NAME" ]; then
+    echo "No generic description provided, using default."
+    GENERIC_NAME="Application"
+fi
+echo "✓ Generic description set to: $GENERIC_NAME"
 echo ""
 
 # Create new application directory
@@ -141,6 +149,9 @@ find "$TEMPLATE_DIR" -type f | sort | while read -r template_file; do
             # Update all fields that need replacement in the desktop file
             echo "    - Updating Name field to capitalized app name"
             sed -i "s/^Name=.*/Name=$APP_NAME_CAPITALIZED/" "$dest_file"
+            
+            echo "    - Updating GenericName field with provided description"
+            sed -i "s/^GenericName=.*/GenericName=$GENERIC_NAME/" "$dest_file"
             
             echo "    - Updating StartupWMClass field"
             sed -i "s/^StartupWMClass=.*/StartupWMClass=$APP_NAME/" "$dest_file"
