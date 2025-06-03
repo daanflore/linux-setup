@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Bruno
+GenericName=api testing
+StartupWMClass=bruno
+Exec=BIN_DIR/bruno --no-sandbox
+Icon=HOME/.local/share/icons/bruno.svg
+Terminal=false
+Type=Application
+Categories=Utility;Office
+MimeType=application/x-md;x-scheme-handler/bruno;
+X-Desktop-File-Install-Version=0.22
