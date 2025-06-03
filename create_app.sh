@@ -89,8 +89,9 @@ echo "Creating application files for $APP_NAME..."
 
 # Find all files in template directory
 echo "Processing template files..."
-find "$TEMPLATE_DIR" -type f -name "*" | while read template_file; do
+find "$TEMPLATE_DIR" -type f | sort | while read -r template_file; do
     filename=$(basename "$template_file")
+    echo "Handling file: $filename"
     
     # Skip the file if it's __deploy.sh (it will be handled separately)
     if [ "$filename" = "__deploy.sh" ]; then
@@ -99,11 +100,11 @@ find "$TEMPLATE_DIR" -type f -name "*" | while read template_file; do
         echo "Processing special file: $filename -> $dest_file"
         cp "$template_file" "$dest_file"
         
-        # Update variables in the deploy script
+        # Update variables in the deploy script using perl instead of sed to avoid issues
         echo "  - Setting APP_NAME to $APP_NAME"
-        sed -i "s/^APP_NAME=$/APP_NAME=$APP_NAME/g" "$dest_file"
+        perl -i -pe "s/^APP_NAME=\$/APP_NAME=$APP_NAME/g" "$dest_file" || sed -i -e "s/^APP_NAME=\$/APP_NAME=$APP_NAME/g" "$dest_file"
         echo "  - Setting REPO_NAME to $REPO_NAME"
-        sed -i "s/^REPO_NAME=$/REPO_NAME=$REPO_NAME/g" "$dest_file"
+        perl -i -pe "s/^REPO_NAME=\$/REPO_NAME=$REPO_NAME/g" "$dest_file" || sed -i -e "s/^REPO_NAME=\$/REPO_NAME=$REPO_NAME/g" "$dest_file"
         
         # Make it executable
         echo "  - Making script executable"
@@ -111,15 +112,21 @@ find "$TEMPLATE_DIR" -type f -name "*" | while read template_file; do
     else
         # For all other files, rename from template.* to APP_NAME.*
         new_filename="${filename/template/$APP_NAME}"
+        # Handle files without 'template' in the name (like README.MD)
+        if [ "$new_filename" = "$filename" ]; then
+            new_filename="$filename"
+        fi
         dest_file="$APP_DIR/$new_filename"
         
         echo "Processing file: $filename -> $new_filename"
         # Copy the file
         cp "$template_file" "$dest_file"
         
-        # Replace any occurrence of 'template' with APP_NAME in the file content
-        echo "  - Updating file content with application name"
-        sed -i "s/template/$APP_NAME/g" "$dest_file"
+        # Only replace 'template' with APP_NAME in binary-safe files (skip README.MD, SVG files)
+        if [[ "$filename" == *.desktop ]]; then
+            echo "  - Updating file content with application name"
+            sed -i "s/template/$APP_NAME/g" "$dest_file" || true
+        fi
         
         # If this is a desktop file, update the Name field with capitalized APP_NAME
         if [[ "$dest_file" == *.desktop ]]; then
@@ -133,9 +140,12 @@ find "$TEMPLATE_DIR" -type f -name "*" | while read template_file; do
         
         echo "  - ✓ File processed successfully"
     fi
-done
+done || { echo "Error: File processing loop exited with an error"; exit 1; }
 
+# Verify all files were copied
 echo "✓ All files processed!"
+echo "Files in destination directory:"
+find "$APP_DIR" -type f | sort
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
