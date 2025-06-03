@@ -9,7 +9,7 @@ REPO_NAME=
 
 DIR=$(dirname "$(readlink -f "$0")")
 
-curl -s curl -s https://api.github.com/repos/"$REPO_NAME"/"$APP_NAME"/releases/latest | grep -P 'browser_download_url(?!.*arm64).*AppImage' | cut -d '"' -f 4 | xargs curl -L -o $BIN_DIR/$APP_NAME
+curl -s curl -s https://api.github.com/repos/"$REPO_NAME"/releases/latest | grep -P 'browser_download_url(?!.*arm64).*AppImage' | cut -d '"' -f 4 | xargs curl -L -o $BIN_DIR/$APP_NAME
 
 chmod +x $BIN_DIR/$APP_NAME
 

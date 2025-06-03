@@ -11,8 +11,8 @@ get_input() {
     local prompt="$1"
     local default="$2"
     local input=""
-    
-    # Show prompt with default value if provided
+    TEST123=2
+    # Show prompt with default value if provihed
     if [ -n "$default" ]; then
         printf "%s [%s]: " "$prompt" "$default"
     else
@@ -100,11 +100,20 @@ find "$TEMPLATE_DIR" -type f | sort | while read -r template_file; do
         echo "Processing special file: $filename -> $dest_file"
         cp "$template_file" "$dest_file"
         
-        # Update variables in the deploy script using perl instead of sed to avoid issues
+        # Update variables in the deploy script by directly writing to a temp file instead of using regex
         echo "  - Setting APP_NAME to $APP_NAME"
-        perl -i -pe "s/^APP_NAME=\$/APP_NAME=$APP_NAME/g" "$dest_file" || sed -i -e "s/^APP_NAME=\$/APP_NAME=$APP_NAME/g" "$dest_file"
+        temp_file=$(mktemp)
+        while IFS= read -r line; do
+            if [[ "$line" == "APP_NAME=" ]]; then
+                echo "APP_NAME=$APP_NAME" >> "$temp_file"
+            elif [[ "$line" == "REPO_NAME=" ]]; then
+                echo "REPO_NAME=$REPO_NAME" >> "$temp_file"
+            else
+                echo "$line" >> "$temp_file"
+            fi
+        done < "$dest_file"
+        mv "$temp_file" "$dest_file"
         echo "  - Setting REPO_NAME to $REPO_NAME"
-        perl -i -pe "s/^REPO_NAME=\$/REPO_NAME=$REPO_NAME/g" "$dest_file" || sed -i -e "s/^REPO_NAME=\$/REPO_NAME=$REPO_NAME/g" "$dest_file"
         
         # Make it executable
         echo "  - Making script executable"
@@ -122,20 +131,34 @@ find "$TEMPLATE_DIR" -type f | sort | while read -r template_file; do
         # Copy the file
         cp "$template_file" "$dest_file"
         
-        # Only replace 'template' with APP_NAME in binary-safe files (skip README.MD, SVG files)
+        # Handle special files
         if [[ "$filename" == *.desktop ]]; then
-            echo "  - Updating file content with application name"
-            sed -i "s/template/$APP_NAME/g" "$dest_file" || true
-        fi
-        
-        # If this is a desktop file, update the Name field with capitalized APP_NAME
-        if [[ "$dest_file" == *.desktop ]]; then
-            echo "  - Special handling for desktop file: capitalizing Name field"
+            echo "  - Special handling for desktop file"
+            
             # Create capitalized version of APP_NAME (first letter uppercase)
             APP_NAME_CAPITALIZED="$(tr '[:lower:]' '[:upper:]' <<< ${APP_NAME:0:1})${APP_NAME:1}"
-            # Update the Name field with the capitalized version
+            
+            # Update all fields that need replacement in the desktop file
+            echo "    - Updating Name field to capitalized app name"
             sed -i "s/^Name=.*/Name=$APP_NAME_CAPITALIZED/" "$dest_file"
-            echo "  - ✓ Desktop file Name field updated to: $APP_NAME_CAPITALIZED"
+            
+            echo "    - Updating StartupWMClass field"
+            sed -i "s/^StartupWMClass=.*/StartupWMClass=$APP_NAME/" "$dest_file"
+            
+            echo "    - Updating Exec field"
+            sed -i "s|^Exec=.*|Exec=BIN_DIR/$APP_NAME --no-sandbox|" "$dest_file"
+            
+            echo "    - Updating Icon field"
+            sed -i "s|^Icon=.*|Icon=HOME/.local/share/icons/$APP_NAME.svg|" "$dest_file"
+            
+            echo "    - Updating MimeType field"
+            sed -i "s|x-scheme-handler/[^;]*;|x-scheme-handler/$APP_NAME;|" "$dest_file"
+            
+            echo "    - Replacing any other occurrences of template or bruno"
+            sed -i "s/template/$APP_NAME/g" "$dest_file"
+            sed -i "s/bruno/$APP_NAME/g" "$dest_file"
+            
+            echo "  - ✓ Desktop file updated with appropriate values"
         fi
         
         echo "  - ✓ File processed successfully"
