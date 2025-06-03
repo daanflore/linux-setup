@@ -14,13 +14,13 @@ get_input() {
     
     # Show prompt with default value if provided
     if [ -n "$default" ]; then
-        echo -n "$prompt [$default]: "
+        printf "%s [%s]: " "$prompt" "$default"
     else
-        echo -n "$prompt: "
+        printf "%s: " "$prompt"
     fi
     
-    # Read user input
-    read input
+    # Read user input on the same line
+    read -r input
     
     # If input is empty and default exists, use default
     if [ -z "$input" ] && [ -n "$default" ]; then
@@ -45,14 +45,16 @@ echo "==== Application Setup ====="
 echo "Please provide the following information:"
 echo ""
 
-APP_NAME=$(get_input "Enter the application name (e.g., myapp)" "")
+printf "Enter the application name (e.g., myapp): "
+read -r APP_NAME
 if [ -z "$APP_NAME" ]; then
     echo "Error: Application name is required. Exiting."
     exit 1
 fi
 echo "✓ Application name set to: $APP_NAME"
 
-REPO_NAME=$(get_input "Enter the repository name (e.g., username/repo)" "")
+printf "Enter the repository name (e.g., username/repo): "
+read -r REPO_NAME
 if [ -z "$REPO_NAME" ]; then
     echo "Error: Repository name is required. Exiting."
     exit 1
@@ -107,17 +109,17 @@ find "$TEMPLATE_DIR" -type f -name "*" | while read template_file; do
         echo "  - Making script executable"
         chmod +x "$dest_file"
     else
-        # For all other files, rename from bruno.* to APP_NAME.*
-        new_filename="${filename/bruno/$APP_NAME}"
+        # For all other files, rename from template.* to APP_NAME.*
+        new_filename="${filename/template/$APP_NAME}"
         dest_file="$APP_DIR/$new_filename"
         
         echo "Processing file: $filename -> $new_filename"
         # Copy the file
         cp "$template_file" "$dest_file"
         
-        # Replace any occurrence of 'bruno' with APP_NAME in the file content
+        # Replace any occurrence of 'template' with APP_NAME in the file content
         echo "  - Updating file content with application name"
-        sed -i "s/bruno/$APP_NAME/g" "$dest_file"
+        sed -i "s/template/$APP_NAME/g" "$dest_file"
         
         # If this is a desktop file, update the Name field with capitalized APP_NAME
         if [[ "$dest_file" == *.desktop ]]; then
