@@ -93,14 +93,14 @@ find "$TEMPLATE_DIR" -type f | sort | while read -r template_file; do
     filename=$(basename "$template_file")
     echo "Handling file: $filename"
     
-    # Skip the file if it's __deploy.sh (it will be handled separately)
-    if [ "$filename" = "__deploy.sh" ]; then
-        # Copy deploy script directly, but update its content
-        dest_file="$APP_DIR/__deploy.sh"
+    # Handle special scripts that need separate processing
+    if [ "$filename" = "__deploy.sh" ] || [ "$filename" = "__undeploy.sh" ]; then
+        # Copy the script to the appropriate destination
+        dest_file="$APP_DIR/$filename"
         echo "Processing special file: $filename -> $dest_file"
         cp "$template_file" "$dest_file"
         
-        # Update variables in the deploy script by directly writing to a temp file instead of using regex
+        # Update variables in the script by directly writing to a temp file
         echo "  - Setting APP_NAME to $APP_NAME"
         temp_file=$(mktemp)
         while IFS= read -r line; do
@@ -183,5 +183,6 @@ echo "┌─ NEXT STEPS ──────────────────�
 echo "│                                                        │"
 echo "│  1. Verify the content of the files in $APP_DIR       │"
 echo "│  2. Run $APP_DIR/__deploy.sh to deploy the application│"
+echo "│  3. To remove later, run $APP_DIR/__undeploy.sh       │"
 echo "│                                                        │"
 echo "└────────────────────────────────────────────────────────┘"
