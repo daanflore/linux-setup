@@ -30,6 +30,45 @@ get_input() {
     fi
 }
 
+# Function to create a properly sized text box based on content
+create_text_box() {
+    # Store the lines in an array
+    local lines=(
+        "NEXT STEPS"
+        ""
+        "1. Verify the content of the files in $APP_DIR"
+        "2. Search for svg icon to put in the svg file"
+        "3. Run $APP_DIR/__deploy.sh to deploy the application"
+        "4. To remove later, run $APP_DIR/__undeploy.sh"
+        ""
+    )
+
+    # Find the longest line to determine box width
+    local max_length=0
+    for line in "${lines[@]}"; do
+        # Use parameter expansion to calculate visible length
+        if [[ ${#line} -gt $max_length ]]; then
+            max_length=${#line}
+        fi
+    done
+
+    # Add padding for margins and formatting
+    local box_width=$((max_length + 6))  # 2 chars on each side + 2 for '│ ' prefix
+
+    # Create the top border with title
+    printf "┌─ %s %s┐\n" "${lines[0]}" "$(printf '─%.0s' $(seq $((box_width - ${#lines[0]} - 4))))"
+
+    # Print content lines with proper padding
+    for ((i=1; i<${#lines[@]}; i++)); do
+        local line="${lines[$i]}"
+        local padding=$((box_width - ${#line} - 2))
+        printf "│ %-${padding}s │\n" "$line"
+    done
+
+    # Create the bottom border
+    printf "└%s┘\n" "$(printf '─%.0s' $(seq $((box_width))))"
+}
+
 # Get workspace directory
 WORKSPACE_DIR="$(dirname "$(readlink -f "$0")")"
 TEMPLATE_DIR="$WORKSPACE_DIR/template"
@@ -131,6 +170,7 @@ find "$TEMPLATE_DIR" -type f | sort | while read -r template_file; do
         new_filename="${filename/template/$APP_NAME}"
         # Handle files without 'template' in the name (like README.MD)
         if [ "$new_filename" = "$filename" ]; then
+            # If filename doesn't contain 'template', keep the original name
             new_filename="$filename"
         fi
         dest_file="$APP_DIR/$new_filename"
@@ -139,32 +179,40 @@ find "$TEMPLATE_DIR" -type f | sort | while read -r template_file; do
         # Copy the file
         cp "$template_file" "$dest_file"
         
-        # Handle special files
+        # ===== DESKTOP FILE SPECIFIC PROCESSING =====
+        # Handle special configuration for .desktop files which require specific formatting
         if [[ "$filename" == *.desktop ]]; then
             echo "  - Special handling for desktop file"
             
-            # Create capitalized version of APP_NAME (first letter uppercase)
+            # Create capitalized version of APP_NAME for display purposes in the desktop environment
             APP_NAME_CAPITALIZED="$(tr '[:lower:]' '[:upper:]' <<< ${APP_NAME:0:1})${APP_NAME:1}"
             
-            # Update all fields that need replacement in the desktop file
+            # === Update standard .desktop file entries ===
+            # The Name field appears in application launchers
             echo "    - Updating Name field to capitalized app name"
             sed -i "s/^Name=.*/Name=$APP_NAME_CAPITALIZED/" "$dest_file"
             
+            # The GenericName is a general description that appears as a tooltip in some launchers
             echo "    - Updating GenericName field with provided description"
             sed -i "s/^GenericName=.*/GenericName=$GENERIC_NAME/" "$dest_file"
             
+            # StartupWMClass helps window managers associate windows with the correct launcher
             echo "    - Updating StartupWMClass field"
             sed -i "s/^StartupWMClass=.*/StartupWMClass=$APP_NAME/" "$dest_file"
             
+            # Exec defines the command to run when the application is launched
             echo "    - Updating Exec field"
             sed -i "s|^Exec=.*|Exec=BIN_DIR/$APP_NAME --no-sandbox|" "$dest_file"
             
+            # Icon defines the path to the application icon
             echo "    - Updating Icon field"
             sed -i "s|^Icon=.*|Icon=HOME/.local/share/icons/$APP_NAME.svg|" "$dest_file"
             
+            # MimeType defines which file types/URLs the application can handle
             echo "    - Updating MimeType field"
             sed -i "s|x-scheme-handler/[^;]*;|x-scheme-handler/$APP_NAME;|" "$dest_file"
             
+            # Replace any remaining template or bruno references with the new app name
             echo "    - Replacing any other occurrences of template or bruno"
             sed -i "s/template/$APP_NAME/g" "$dest_file"
             sed -i "s/bruno/$APP_NAME/g" "$dest_file"
@@ -190,10 +238,7 @@ echo "✓ Application $APP_NAME has been created in: $APP_DIR"
 echo "✓ All template files were copied and updated successfully"
 echo ""
 
-echo "┌─ NEXT STEPS ──────────────────────────────────────────┐"
-echo "│                                                        │"
-echo "│  1. Verify the content of the files in $APP_DIR       │"
-echo "│  2. Run $APP_DIR/__deploy.sh to deploy the application│"
-echo "│  3. To remove later, run $APP_DIR/__undeploy.sh       │"
-echo "│                                                        │"
-echo "└────────────────────────────────────────────────────────┘"
+# Replace the static box with dynamically sized box
+create_text_box
+
+# End of script
