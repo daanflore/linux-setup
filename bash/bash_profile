@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# set PATH so it includes personal bin if it exists
+declare -a paths=("$HOME/bin", "$HOME/.local/bin")
+for path_to_add in "${paths[@]}" ; do 
+  if [ -d "$path_to_add"] ; then
+    # Check if the "$path_to_add" dir exists
+    PATH="$path_to_add/bin:$PATH"
+  fi
+done
+
+mesg "test"
