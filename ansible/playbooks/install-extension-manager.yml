@@ -1,0 +1,5 @@
+---
+- hosts: localhost
+  name: Install Extension Manager
+  roles:
+    - setup_extension_manager

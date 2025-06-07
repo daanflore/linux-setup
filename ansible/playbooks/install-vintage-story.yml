@@ -1,0 +1,6 @@
+---
+- hosts: localhost
+  name: Install vintage story
+
+  roles:
+    

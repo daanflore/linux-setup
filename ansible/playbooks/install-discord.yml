@@ -1,5 +1,5 @@
 ---
 - hosts: localhost
-  
+  name: Install Discord
   roles:
     - setup_discord
