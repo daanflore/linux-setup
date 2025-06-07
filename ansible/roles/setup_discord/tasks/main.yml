@@ -1,0 +1,7 @@
+---
+# tasks file for setup_discord
+- name: Ensure Discord is installed
+  community.general.snap:
+    name: discord
+    state: present
+  become: true

@@ -1,0 +1,24 @@
+---
+# tasks file for setup_steam
+- name: Ensure Steam is installed
+  community.general.snap:
+    name: steam
+    state: present
+  become: true
+
+- name: Add i386 architecture
+  ansible.builtin.command: dpkg --add-architecture i386
+  become: true
+  changed_when: false
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+  become: true
+  changed_when: false
+
+- name: Install libnvidia-gl-570:i386
+  ansible.builtin.apt:
+    name: libnvidia-gl-570:i386
+    state: present
+  become: true
