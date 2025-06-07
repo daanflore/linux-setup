@@ -1,0 +1,7 @@
+---
+# tasks file for setup_vlc
+- name: Install VLC media player
+  community.general.snap:
+    name: vlc
+    state: present
+  become: true

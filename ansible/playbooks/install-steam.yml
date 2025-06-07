@@ -3,4 +3,3 @@
   name: Install Steam
   roles:
     - setup_steam
-    
