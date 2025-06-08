@@ -2,11 +2,16 @@
 
 # set PATH so it includes personal bin if it exists
 declare -a paths=("$HOME/bin", "$HOME/.local/bin")
+
 for path_to_add in "${paths[@]}" ; do 
-  if [ -d "$path_to_add"] ; then
-    # Check if the "$path_to_add" dir exists
-    PATH="$path_to_add/bin:$PATH"
-  fi
+	if [ -d "$path_to_add" ] ; then
+		# Check if the "$path_to_add" dir exists    		
+		if [[ ":$PATH:" != *":$path_to_add:"* ]]; then
+			PATH="$path_to_add:$PATH"
+		fi
+ 	fi
 done
 
-mesg "test"
+if [ -n "$BASH_VERSION" ] && [ -f "$HOME/.bashrc" ]; then
+	. "$HOME/.bashrc"
+fi
