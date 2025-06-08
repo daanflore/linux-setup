@@ -6,3 +6,5 @@ ln bash_profile ~/.bash_profile
 rm ~/.bashrc
 ln bashrc ~/.bashrc
 
+rm ~/.dircolors
+ln dircolors ~/.dircolors
