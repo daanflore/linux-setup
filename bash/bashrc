@@ -3,6 +3,11 @@
 #VARIABLE
 PYTHON_VERSION=3.12.3
 
+# ~/.bashrc: executed by bash(1) for non-login shells.
+# If not running interactively, don't do anything
+# Will prevent the error bind warning line editing not enabled
+[ -z "$PS1" ] && return
+
 # When multiple options list them and add shift support to go backwards
 bind 'TAB:menu-complete'
 bind '"\e[Z": menu-complete-backward'
