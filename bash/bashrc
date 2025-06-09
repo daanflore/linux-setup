@@ -8,10 +8,12 @@ PYTHON_VERSION=3.12.3
 # Will prevent the error bind warning line editing not enabled
 [ -z "$PS1" ] && return
 
+# Disable bell sound
+bind 'set bell-style visible'
+
 # When multiple options list them and add shift support to go backwards
 bind 'TAB:menu-complete'
 bind '"\e[Z": menu-complete-backward'
-
 # Make it case insensitve
 bind 'set completion-ignore-case on'
 
